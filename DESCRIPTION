@@ -1,0 +1,14 @@
+Package: ExposurePathway
+Type: Package
+Title: Exposure Pathway Builder
+Version: 0.1.0
+Author: Chris Knoll
+Maintainer: Chris Knoll <cknoll@ohdsi.org>
+Description: The Exposure Pathway Builder creates the exposure pathway patterns from a specified exposure sequence query.
+License: None
+Encoding: UTF-8
+LazyData: true
+Imports:
+    DatabaseConnector,
+    SqlRender
+RoxygenNote: 5.0.1
