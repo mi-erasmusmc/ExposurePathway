@@ -2,7 +2,7 @@
 execute <- function(servers, cdmDatabaseSchema, smallCellCount = 100, maxPathSize=5, sequenceSql) {
 
   if (missing(sequenceSql)) {
-    exposureSequenceSql <- SqlRender::readSql(system.file("sql","exposureSequence.sql", package="JnJExposurePathway"));
+    exposureSequenceSql <- SqlRender::readSql(system.file("sql","exposureSequence.sql", package="ExposurePathway"));
   }
   else {
     exposureSequenceSql <- SqlRender::readSql(sequenceSql);
@@ -20,8 +20,8 @@ execute <- function(servers, cdmDatabaseSchema, smallCellCount = 100, maxPathSiz
       dir.create(serverFolder);
 
     # copy .css and .js depedencies to output folder
-    file.copy(system.file(from="template","sequences.js", package="JnJExposurePathway"), to=serverFolder);
-    file.copy(system.file(from="template","sequences.css", package="JnJExposurePathway"), to=serverFolder);
+    file.copy(system.file(from="template","sequences.js", package="ExposurePathway"), to=serverFolder);
+    file.copy(system.file(from="template","sequences.css", package="ExposurePathway"), to=serverFolder);
 
     connectionDetails <- DatabaseConnector::createConnectionDetails(dbms=server$dbms, server=server$hostname, port=server$port, user = server$user, password = server$password);
 
@@ -39,7 +39,7 @@ execute <- function(servers, cdmDatabaseSchema, smallCellCount = 100, maxPathSiz
         cdmDatabaseSchema <- paste(database$name, cdmDatabaseSchema, sep=".");
 
       # Generate exposure sequence
-      exposureSequenceSql <- SqlRender::readSql(system.file("sql","exposureSequence.sql", package="JnJExposurePathway"));
+      exposureSequenceSql <- SqlRender::readSql(system.file("sql","exposureSequence.sql", package="ExposurePathway"));
       renderedSql <- SqlRender::renderSql(exposureSequenceSql,
                                cdm_database_schema = cdmDatabaseSchema
                               )$sql;
@@ -51,13 +51,13 @@ execute <- function(servers, cdmDatabaseSchema, smallCellCount = 100, maxPathSiz
 
       # init #EXPOSURE_PATH with people from first exposure
       # concat -end to people who don't have a second exposure
-      initPathSql <- SqlRender::readSql(system.file("sql","initUsagePath.sql", package="JnJExposurePathway"));
+      initPathSql <- SqlRender::readSql(system.file("sql","initUsagePath.sql", package="ExposurePathway"));
       translatedSql <- SqlRender::translateSql(initPathSql, targetDialect = connectionDetails$dbms, oracleTempSchema = database$tempSchema)$sql;
       SqlRender::writeSql(translatedSql,paste(databaseOutputFolder, "initUsagePath.sql", sep="/"));
       DatabaseConnector::executeSql(conn,translatedSql);
 
 
-      usagePathIterationSql <- SqlRender::readSql(system.file("sql","usagePathIteration.sql", package="JnJExposurePathway"));
+      usagePathIterationSql <- SqlRender::readSql(system.file("sql","usagePathIteration.sql", package="ExposurePathway"));
       i <- 2;
       while (i <= maxPathSize) {
         remainingPeopleCountSql <- "SELECT COUNT(*) as REMAINING from #EXPOSURE_SEQUENCE where ORDINAL = @i";
@@ -76,7 +76,7 @@ execute <- function(servers, cdmDatabaseSchema, smallCellCount = 100, maxPathSiz
       }
 
       # add truncate markers
-      usagePathFinalizeSql <- SqlRender::readSql(system.file("sql","usagePathFinalize.sql", package="JnJExposurePathway"));
+      usagePathFinalizeSql <- SqlRender::readSql(system.file("sql","usagePathFinalize.sql", package="ExposurePathway"));
       renderedSql <- SqlRender::renderSql(usagePathFinalizeSql, sequence=i)$sql;
       translatedSql <- SqlRender::translateSql(renderedSql, targetDialect = connectionDetails$dbms, oracleTempSchema = database$tempSchema)$sql;
       SqlRender::writeSql(translatedSql,paste(databaseOutputFolder, "usagePathFinalize.sql", sep="/"));
@@ -98,15 +98,15 @@ execute <- function(servers, cdmDatabaseSchema, smallCellCount = 100, maxPathSiz
       write.table(conceptNamesDF, file=paste(databaseOutputFolder, "conceptNames.txt", sep="/"), row.names=FALSE, col.names=TRUE, quote=FALSE, sep="\t");
 
       # cleanupTempTables
-      cleanupSql <- SqlRender::readSql(system.file("sql","cleanupTables.sql", package="JnJExposurePathway"));
+      cleanupSql <- SqlRender::readSql(system.file("sql","cleanupTables.sql", package="ExposurePathway"));
       translatedSql <- SqlRender::translateSql(cleanupSql, targetDialect = connectionDetails$dbms, oracleTempSchema = database$tempSchema)$sql;
       SqlRender::writeSql(translatedSql,paste(databaseOutputFolder, "cleanupTables.sql", sep="/"));
       DatabaseConnector::executeSql(conn,translatedSql);
 
       # generate HTML?
 
-      htmlTemplate <- readLines(system.file("template","sunburstPath.html", package="JnJExposurePathway"));
-      exposurePathsTSV <- readLines(paste(databaseOutputFolder, "exposurePaths.txt", sep="/"));
+      htmlTemplate <- readLines(system.file("template","sunburstPath.html", package="ExposurePathway"));
+      exposurePathsTSV <- readLines(paste(databaseOutputFolder, "Depression", "exposurePaths.txt", sep="/"));
       conceptNamesTSV <- readLines(paste(databaseOutputFolder, "conceptNames.txt", sep="/"));
 
       htmlTemplate <- gsub("@pathways",paste(exposurePathsTSV, collapse="\n"), htmlTemplate);

@@ -2,4 +2,5 @@
 
 export(buildDatabase)
 export(buildServer)
+export(createGraphsFromStudy)
 export(execute)
